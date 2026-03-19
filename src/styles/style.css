@@ -1,0 +1,32 @@
+:root{
+    --vw: 0.01vw;
+}
+
+html {
+    font-size: calc(16 / 1728 * 100 * var(--vw));
+    line-height: 1;
+  }
+
+.body
+{
+    font-size: calc(18 / 1728 * 100 * var(--vw));
+    line-height: 1.1; 
+}
+
+.subtitle
+{
+    font-size: calc(32 / 1728 * 100 * var(--vw));
+    line-height: 1.1;   
+}
+
+.title
+{
+    font-size: calc(42 / 1728 * 100 * var(--vw));
+    line-height: 1.1;   
+}
+
+.label
+{
+    font-size: calc(14 / 1728 * 100 * var(--vw));
+    line-height: 1.1;   
+}

@@ -1,3 +1,3 @@
 import './styles/style.css'
-
-console.log('Hello from VS Code')
+import './components/scroll.js'
+import { initScaling } from './components/scaling.js'
