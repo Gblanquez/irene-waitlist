@@ -61,7 +61,14 @@ html {
     }
 
     .mob-label {
-        font-size: calc(14 / 480 * 100 * var(--vw)) !important;
+        font-size: calc(16 / 480 * 100 * var(--vw)) !important;
         line-height: 1.1;
       }
+
+      .mob-sub {
+        font-size: calc(18 / 480 * 100 * var(--vw)) !important;
+        line-height: 1.1;
+      }
+
+
   }
