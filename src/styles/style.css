@@ -30,3 +30,38 @@ html {
     font-size: calc(14 / 1728 * 100 * var(--vw));
     line-height: 1.1;   
 }
+
+
+
+
+@media (max-width: 480px) {
+    html {
+      font-size: calc(16 / 480 * 100 * var(--vw));
+      line-height: 1;
+    }
+  
+    .body {
+      font-size: calc(18 / 480 * 100 * var(--vw));
+      line-height: 1.1;
+    }
+  
+    .subtitle {
+      font-size: calc(26 / 480 * 100 * var(--vw));
+      line-height: 1.1;
+    }
+  
+    .title {
+      font-size: calc(32 / 480 * 100 * var(--vw));
+      line-height: 1.1;
+    }
+  
+    .label {
+      font-size: calc(14 / 480 * 100 * var(--vw));
+      line-height: 1.1;
+    }
+
+    .mob-label {
+        font-size: calc(14 / 480 * 100 * var(--vw)) !important;
+        line-height: 1.1;
+      }
+  }
