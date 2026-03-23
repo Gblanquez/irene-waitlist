@@ -53,6 +53,11 @@ html {
     border-width: 0px !important;
 }
 
+.w-form-formradioinput--inputType-custom.w--redirected-checked{
+    border-color: black !important;
+    border-width: 0px !important;
+}
+
 
 
 
