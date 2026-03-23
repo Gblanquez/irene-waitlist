@@ -31,6 +31,28 @@ html {
     line-height: 1.1;   
 }
 
+.form-checkbox {
+    background-image: none !important;
+
+  }
+  
+  .form-checkbox:checked {
+    background-image: none !important;
+
+  }
+
+.w-checkbox-input--inputType-custom,
+.w-checkbox-input--inputType-custom.w--redirected-checked,
+.w-checkbox-input--inputType-custom.w--redirected-focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.w-checkbox-input--inputType-custom.w--redirected-checked{
+    border-color: black !important;
+    border-width: 0px !important;
+}
+
 
 
 
