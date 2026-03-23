@@ -4,8 +4,9 @@ import { lenis } from "./scroll.js";
 
 export default function formAnimation() {
   const formHolder = document.querySelector('.form-holder')
-  const formContainer = document.querySelector('.form-container')
+  const formContainer = document.querySelector('.form-content-parent')
   const ctas = document.querySelectorAll('.cta')
+  const closeButton = document.querySelector('[data-a="close-form"]')
 
   let formLenis = null
 
@@ -27,6 +28,20 @@ export default function formAnimation() {
           gsap.ticker.add((time) => formLenis?.raf(time * 1000))
         }
       })
+    })
+  })
+
+  closeButton.addEventListener('click', () => {
+    if (formLenis) {
+      formLenis.destroy()
+      formLenis = null
+    }
+    gsap.to(formContainer, {
+      y: '110%', duration: 1.1, ease: 'power3.inOut',
+      onComplete: () => {
+        formHolder.classList.remove('flex')
+        lenis.start()
+      }
     })
   })
 }
