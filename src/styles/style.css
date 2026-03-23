@@ -5,7 +5,19 @@
 html {
     font-size: calc(16 / 1728 * 100 * var(--vw));
     line-height: 1;
+    scrollbar-width: none;
   }
+  
+body {
+    -ms-overflow-style: none;
+  }
+
+
+::-webkit-scrollbar {
+    display: none;
+  }
+
+
 
 .body
 {
@@ -57,6 +69,8 @@ html {
     border-color: black !important;
     border-width: 0px !important;
 }
+
+
 
 
 
