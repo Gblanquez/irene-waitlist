@@ -1,6 +1,6 @@
 import Lenis from 'lenis'
-import { gsap } from "gsap";
-import { lenis } from "./scroll.js";
+import { gsap } from 'gsap'
+import { lenis } from './scroll.js'
 
 export default function formAnimation() {
   const formHolder = document.querySelector('.form-holder')
@@ -9,40 +9,68 @@ export default function formAnimation() {
   const closeButton = document.querySelector('[data-a="close-form"]')
 
   let formLenis = null
+  let formLenisTick = null
 
-  gsap.set(formContainer, { y: '110%' })
+  gsap.set(formContainer, { yPercent: 110 })
 
-  ctas.forEach(cta => {
-    cta.addEventListener('click', () => {
-      lenis.stop()
-      formHolder.classList.add('flex')
+  const openForm = () => {
+    lenis.stop()
 
-      gsap.to(formContainer, {
-        y: '0%', duration: 1.1, ease: 'power3.out',
-        onComplete: () => {
+    formHolder.classList.add('is-open')
+
+    gsap.set(formHolder, { opacity: 1, visibility: 'visible', pointerEvents: 'auto' })
+
+    gsap.to(formContainer, {
+      yPercent: 0,
+      duration: 1.1,
+      ease: 'power3.out',
+      onComplete: () => {
+        if (!formLenis) {
           formLenis = new Lenis({
             wrapper: formHolder,
-            content: formHolder.children[0],
+            content: formContainer,
             overscroll: false,
           })
-          gsap.ticker.add((time) => formLenis?.raf(time * 1000))
-        }
-      })
-    })
-  })
 
-  closeButton.addEventListener('click', () => {
+          formLenisTick = (time) => formLenis?.raf(time * 1000)
+          gsap.ticker.add(formLenisTick)
+        }
+
+        formLenis.resize()
+      }
+    })
+  }
+
+  const closeForm = () => {
     if (formLenis) {
       formLenis.destroy()
       formLenis = null
     }
+
+    if (formLenisTick) {
+      gsap.ticker.remove(formLenisTick)
+      formLenisTick = null
+    }
+
     gsap.to(formContainer, {
-      y: '110%', duration: 1.1, ease: 'power3.inOut',
+      yPercent: 110,
+      duration: 1.1,
+      ease: 'power3.inOut',
       onComplete: () => {
-        formHolder.classList.remove('flex')
+        formHolder.classList.remove('is-open')
+        gsap.set(formHolder, {
+          opacity: 0,
+          visibility: 'hidden',
+          pointerEvents: 'none',
+        })
         lenis.start()
       }
     })
-  })
-}
+  }
 
+  ctas.forEach((cta) => {
+    cta.addEventListener('click', openForm)
+  })
+
+  closeButton?.addEventListener('click', closeForm)
+}

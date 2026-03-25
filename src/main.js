@@ -5,6 +5,9 @@ import globalLinesReveal from './components/lines.js'
 import globalVerticalLinesReveal from './components/vertical-lines.js'
 import formAnimation from './components/form.js'
 
+initScaling();
 globalVerticalLinesReveal();
 globalLinesReveal();
 formAnimation();
+
+

@@ -7,7 +7,7 @@ html {
     line-height: 1;
     scrollbar-width: none;
   }
-  
+
 body {
     -ms-overflow-style: none;
   }
@@ -69,6 +69,21 @@ body {
     border-color: black !important;
     border-width: 0px !important;
 }
+
+.form-holder {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  
+  .form-holder.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
 
 
 
