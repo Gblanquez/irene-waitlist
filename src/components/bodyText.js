@@ -10,6 +10,9 @@ export default function bodyTextReveal() {
 
   let splitInstances = [];
   let resizeTimer = null;
+  let hasBuilt = false;
+
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
   const waitForFonts = () => {
     if (document.fonts && document.fonts.ready) return document.fonts.ready;
@@ -34,6 +37,9 @@ export default function bodyTextReveal() {
     cleanup();
 
     targets.forEach((el) => {
+      // prevent re-animating same element on mobile
+      if (isMobile && el._animated) return;
+
       const split = SplitText.create(el, {
         type: "lines,words",
         autoSplit: true,
@@ -46,6 +52,7 @@ export default function bodyTextReveal() {
             onComplete: () => {
               self.revert();
               self._isReverted = true;
+              el._animated = true; // mark as done
             },
           });
 
@@ -62,6 +69,7 @@ export default function bodyTextReveal() {
             start: "top bottom",
             toggleActions: "play none none none",
             animation: tl,
+            once: isMobile, // <-- key
           });
 
           return tl;
@@ -73,16 +81,20 @@ export default function bodyTextReveal() {
     });
 
     ScrollTrigger.refresh();
+    hasBuilt = true;
   };
 
   waitForFonts().then(() => {
     requestAnimationFrame(build);
   });
 
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      waitForFonts().then(() => requestAnimationFrame(build));
-    }, 200);
-  });
+
+  if (!isMobile) {
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        waitForFonts().then(() => requestAnimationFrame(build));
+      }, 200);
+    });
+  }
 }
