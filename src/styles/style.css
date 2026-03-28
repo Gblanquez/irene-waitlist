@@ -133,3 +133,17 @@ body {
 
 
   }
+
+
+  .g-link.underline {
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 100% 100%;
+    background-size: 100% 1px;
+    transition: background-size 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  
+  .g-link.underline:hover {
+    background-size: 0% 1px;
+  }
