@@ -147,3 +147,12 @@ body {
   .g-link.underline:hover {
     background-size: 0% 1px;
   }
+
+  .img
+  {
+    opacity: 0;
+  }
+
+  canvas{
+    z-index: -10;
+  }

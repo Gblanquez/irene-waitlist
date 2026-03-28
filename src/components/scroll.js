@@ -1,33 +1,32 @@
-
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
-import { gsap } from "gsap";
 
-let rafId = null;
-let rafTime = 0;
+let rafId = null
 
 const lenis = new Lenis({
   duration: 1.2,
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  direction: 'vertical',
-  gestureDirection: 'vertical',
-  smooth: true,
+  smoothWheel: true,
   smoothTouch: false,
   touchMultiplier: 2,
   infinite: false,
-  raf: false
+  overscroll: false,
+  autoRaf: false,
 })
 
-let onScrollUpdate = () => {} 
+let onScrollUpdate = () => {}
 
 function customRAF(time) {
   rafId = requestAnimationFrame(customRAF)
-  rafTime = time
 
   lenis.raf(time)
 
-  onScrollUpdate(time) 
-  gsap.ticker.frame = time
+  onScrollUpdate({
+    scroll: lenis.scroll,
+    velocity: lenis.velocity,
+    progress: lenis.progress,
+    time
+  })
 }
 
 function setOnScrollUpdate(cb) {
@@ -47,5 +46,6 @@ function stopRAF() {
   }
 }
 
-export { lenis, startRAF, stopRAF, setOnScrollUpdate, rafTime }
+export { lenis, startRAF, stopRAF, setOnScrollUpdate }
+
 startRAF()
