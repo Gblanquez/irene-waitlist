@@ -9,6 +9,7 @@ import bodyTextReveal from './components/bodyText.js'
 import titleTextReveal from './components/titleText.js'
 import labelTextReveal from './components/labelText.js'
 import globalLinkHover from './components/linksHover.js'
+import globalLinkPageHover from './components/globalLinks.js'
 
 import SketchManager from './sketch/sketch.js'
 import {setOnScrollUpdate} from './components/scroll.js'
@@ -21,6 +22,7 @@ bodyTextReveal()
 globalLinkHover()
 labelTextReveal()
 titleTextReveal()
+globalLinkPageHover()
 
 
 const container = document.querySelector('.page-wrapper')
