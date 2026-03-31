@@ -15,6 +15,8 @@ import collabLinkPageHover from './components/collaboratorLink.js'
 import SketchManager from './sketch/sketch.js'
 import {setOnScrollUpdate} from './components/scroll.js'
 
+import taxi from './taxi/transition.js'
+
 initScaling()
 globalVerticalLinesReveal()
 globalLinesReveal()
@@ -26,14 +28,4 @@ titleTextReveal()
 globalLinkPageHover()
 collabLinkPageHover()
 
-const container = document.querySelector('.page-wrapper')
 
-if (container) {
-  SketchManager.init(container)
-  
-
-
-  setOnScrollUpdate(({ velocity }) => {
-    SketchManager.setVelocity(velocity)
-  })
-}

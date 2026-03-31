@@ -72,6 +72,15 @@ class SketchManager {
     })
   }
 
+  refreshMeshes() {
+    globalSceneManager.meshes.forEach((m) => {
+      if (m.mesh) this.scene.remove(m.mesh)
+    })
+
+    globalSceneManager.updateMeshes()
+    this.createMeshes()
+  }
+
   setVelocity(v) {
     this.velocity = v
   }

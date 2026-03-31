@@ -1,10 +1,10 @@
 import { Core } from '@unseenco/taxi'
-import globalTransition from './globalTransition'
-import defaultRender from './defaultRender'
+import globalTransition from './globalTransition.js'
+import globalRender from './globalRender.js'
 
 const taxi = new Core({
   renderers: {
-    default: defaultRender,
+    default: globalRender,
   },
   transitions: {
     default: globalTransition,

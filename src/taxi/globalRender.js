@@ -1,5 +1,10 @@
 import { Renderer } from '@unseenco/taxi';
-import { lenis, startRAF, stopRAF } from '../scroll/scroll'
+import { lenis, startRAF, stopRAF,setOnScrollUpdate } from '../components/scroll.js'
+
+
+import { initScaling } from '../components/scaling.js'
+import SketchManager from '../sketch/sketch.js'
+
 import gsap from 'gsap'
 
 export default class defaultRender extends Renderer {
@@ -8,51 +13,29 @@ export default class defaultRender extends Renderer {
 
       startRAF()
 
+      const container = document.querySelector('.page-wrapper')
+
+      if (container) {
+      SketchManager.init(container)
+    
+  
+  
+    setOnScrollUpdate(({ velocity }) => {
+      SketchManager.setVelocity(velocity)
+    })
+      }
+      
+
       }
   onEnter() {
-
     startRAF()
-    console.log('defaultRenderEnter')
-
-    const container = this.wrapper
-
-    const tl = gsap.timeline(
-      {
-        onStart: () => 
-          {
-
-
-          },
-          onComplete: () => 
-            {
-
-
-            }
-      })
-
-      tl.set(container,
-        {
-            opacity: 0,
-        })
-      tl.from(container,
-        {
-            opacity: 1,
-            duration: 0.2,
-            onStart: () => 
-                {
-
-                },
-            onComplete: () => 
-                {
-           
-                }
-        })
-
-
-
+    initScaling()
+    SketchManager.refreshMeshes()
   }
 
   onEnterCompleted() {
+
+
 
   }
 
