@@ -31,6 +31,7 @@ export default class defaultRender extends Renderer {
     startRAF()
     initScaling()
     SketchManager.refreshMeshes()
+    SketchManager.revealMeshes()
   }
 
   onEnterCompleted() {

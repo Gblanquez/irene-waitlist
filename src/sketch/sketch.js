@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import gsap from 'gsap'
 import globalSceneManager from './sceneManager'
 
 let sm = null
@@ -79,6 +80,28 @@ class SketchManager {
 
     globalSceneManager.updateMeshes()
     this.createMeshes()
+  }
+
+  revealMeshes({ duration = 1, ease = 'power3.out', stagger = 0.1, delay = 0 } = {}) {
+    globalSceneManager.meshes.forEach((m, i) => {
+      m.material.uniforms.uOpacity.value = 0
+      gsap.to(m.material.uniforms.uOpacity, {
+        value: 1,
+        duration,
+        ease,
+        delay: delay + i * stagger,
+      })
+    })
+  }
+
+  hideMeshes({ duration = 0.6, ease = 'power3.in' } = {}) {
+    globalSceneManager.meshes.forEach((m) => {
+      gsap.to(m.material.uniforms.uOpacity, {
+        value: 0,
+        duration,
+        ease,
+      })
+    })
   }
 
   setVelocity(v) {
