@@ -11,13 +11,17 @@ export default class globalTransition extends Transition {
     const tsbox = document.querySelector('.tsbox')
     const overlay = document.querySelector('.overlay')
 
+    if (!tsbox || !overlay) {
+      done()
+      return
+    }
+
     gsap.set(tsbox, { y: '100%', opacity: 1 })
     gsap.set(overlay, { opacity: 0 })
 
     const tl = gsap.timeline({ onComplete: done })
 
-
-    .to(overlay, {
+    tl.to(overlay, {
       opacity: 0.6,
       duration: 1.2,
       ease: 'power3.inOut',
@@ -41,15 +45,24 @@ export default class globalTransition extends Transition {
 
     const overlay = document.querySelector('.overlay')
 
+    if (!overlay) {
+      done()
+      return
+    }
+
     gsap.set(to, { opacity: 1, scale: 1, y: '0%' })
     gsap.set(overlay, { opacity: 0 })
 
     const tl = gsap.timeline({ onComplete: done })
 
-    tl.to(tsbox, {
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power3.out',
-    })
+    if (tsbox) {
+      tl.to(tsbox, {
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+      })
+    } else {
+      done()
+    }
   }
 }

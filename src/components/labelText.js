@@ -37,7 +37,7 @@ export default function labelTextReveal() {
     cleanup();
 
     targets.forEach((el) => {
-      // prevent re-animating same element on mobile
+
       if (isMobile && el._animated) return;
 
       const split = SplitText.create(el, {
@@ -69,7 +69,7 @@ export default function labelTextReveal() {
             start: "top bottom",
             toggleActions: "play none none none",
             animation: tl,
-            once: isMobile, // <-- key
+            once: isMobile, 
           });
 
           return tl;

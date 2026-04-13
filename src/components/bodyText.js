@@ -37,7 +37,7 @@ export default function bodyTextReveal() {
     cleanup();
 
     targets.forEach((el) => {
-      // prevent re-animating same element on mobile
+
       if (isMobile && el._animated) return;
 
       const split = SplitText.create(el, {
@@ -52,7 +52,7 @@ export default function bodyTextReveal() {
             onComplete: () => {
               self.revert();
               self._isReverted = true;
-              el._animated = true; // mark as done
+              el._animated = true; 
             },
           });
 

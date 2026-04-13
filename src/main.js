@@ -17,15 +17,16 @@ import {setOnScrollUpdate} from './components/scroll.js'
 
 import taxi from './taxi/transition.js'
 
-initScaling()
-globalVerticalLinesReveal()
-globalLinesReveal()
-formAnimation()
-bodyTextReveal()
-globalLinkHover()
-labelTextReveal()
-titleTextReveal()
-globalLinkPageHover()
-collabLinkPageHover()
+
+// initScaling()
+// globalVerticalLinesReveal()
+// globalLinesReveal()
+// formAnimation()
+// bodyTextReveal()
+// globalLinkHover()
+// labelTextReveal()
+// titleTextReveal()
+// globalLinkPageHover()
+// collabLinkPageHover()
 
 

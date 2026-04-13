@@ -12,7 +12,7 @@ import globalLinkPageHover from '../components/globalLinks.js'
 import collabLinkPageHover from '../components/collaboratorLink.js'
 import SketchManager from '../sketch/sketch.js'
 
-export default class defaultRender extends Renderer {
+export default class collabRender extends Renderer {
   runPageSetup() {
     initScaling()
     SketchManager.refreshMeshes()
@@ -53,7 +53,6 @@ export default class defaultRender extends Renderer {
   }
 
   onEnterCompleted() {
-
 
 
   }
