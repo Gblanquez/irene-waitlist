@@ -23,7 +23,6 @@ export default class collabRender extends Renderer {
     this.thumbnailLinks = []
     this.thumbnailItems = []
     this.thumbnailMark = null
-    this.activeThumbnailIndex = -1
     this.thumbnailMarkBaseX = 0
     this.thumbnailMarkBaseY = 0
     this.thumbnailMarkMoveX = null
@@ -103,7 +102,6 @@ export default class collabRender extends Renderer {
     this.thumbnailLinks = Array.from(document.querySelectorAll('.collab-link'))
     this.thumbnailMark = document.querySelector('.thumbnail-mark')
     this.thumbnailItems = this.getThumbnailItems()
-    this.activeThumbnailIndex = -1
 
     if (!this.thumbnailMark || !this.thumbnailItems.length) return
 
@@ -131,37 +129,56 @@ export default class collabRender extends Renderer {
     if (!this.thumbnailLinks.length || !this.thumbnailItems.length || !this.thumbnailMark) return
 
     const viewportCenter = window.innerHeight * 0.5
-
-    const closestIndex = this.thumbnailLinks.reduce((closest, link, index) => {
-      const rect = link.getBoundingClientRect()
-      const linkCenter = rect.top + (rect.height * 0.5)
-      const distance = Math.abs(linkCenter - viewportCenter)
-
-      if (distance < closest.distance) {
-        return { index, distance }
-      }
-
-      return closest
-    }, { index: 0, distance: Number.POSITIVE_INFINITY }).index
-
-    if (closestIndex === this.activeThumbnailIndex) return
-
-    const targetThumbnail = this.thumbnailItems[closestIndex]
-    if (!targetThumbnail) return
-
     const thumbnailsParent = this.thumbnailsParent || document.querySelector('.thumbnails-parent')
     if (!thumbnailsParent || !this.thumbnailMarkMoveX || !this.thumbnailMarkMoveY) return
 
     const parentRect = thumbnailsParent.getBoundingClientRect()
-    const thumbnailRect = targetThumbnail.getBoundingClientRect()
     const markRect = this.thumbnailMark.getBoundingClientRect()
+    const linkCenters = this.thumbnailLinks.map((link) => {
+      const rect = link.getBoundingClientRect()
+      return rect.top + (rect.height * 0.5)
+    })
+    const thumbnailCenters = this.thumbnailItems.map((thumbnail) => {
+      const rect = thumbnail.getBoundingClientRect()
+      return {
+        x: (rect.left - parentRect.left) + (rect.width * 0.5),
+        y: (rect.top - parentRect.top) + (rect.height * 0.5),
+      }
+    })
 
-    const targetX = (thumbnailRect.left - parentRect.left) + (thumbnailRect.width * 0.5) - (markRect.width * 0.5)
-    const targetY = (thumbnailRect.top - parentRect.top) + (thumbnailRect.height * 0.5) - (markRect.height * 0.5)
+    if (!linkCenters.length || !thumbnailCenters.length) return
+
+    let targetCenter = thumbnailCenters[0]
+
+    if (viewportCenter <= linkCenters[0]) {
+      targetCenter = thumbnailCenters[0]
+    } else if (viewportCenter >= linkCenters[linkCenters.length - 1]) {
+      targetCenter = thumbnailCenters[thumbnailCenters.length - 1]
+    } else {
+      for (let index = 0; index < linkCenters.length - 1; index += 1) {
+        const startLinkCenter = linkCenters[index]
+        const endLinkCenter = linkCenters[index + 1]
+
+        if (viewportCenter < startLinkCenter || viewportCenter > endLinkCenter) continue
+
+        const range = endLinkCenter - startLinkCenter || 1
+        const progress = (viewportCenter - startLinkCenter) / range
+        const startThumbnailCenter = thumbnailCenters[index]
+        const endThumbnailCenter = thumbnailCenters[index + 1]
+
+        targetCenter = {
+          x: startThumbnailCenter.x + ((endThumbnailCenter.x - startThumbnailCenter.x) * progress),
+          y: startThumbnailCenter.y + ((endThumbnailCenter.y - startThumbnailCenter.y) * progress),
+        }
+        break
+      }
+    }
+
+    const targetX = targetCenter.x - (markRect.width * 0.5)
+    const targetY = targetCenter.y - (markRect.height * 0.5)
 
     this.thumbnailMarkMoveX(targetX - this.thumbnailMarkBaseX)
     this.thumbnailMarkMoveY(targetY - this.thumbnailMarkBaseY)
-    this.activeThumbnailIndex = closestIndex
   }
 
   updateThumbnails(progress = 0) {
