@@ -16,8 +16,13 @@ html {
 
 body {
     -ms-overflow-style: none;
-    /* background-color: #EEEEEE; */
+
   }
+
+.thumbnails-parent
+{
+    position: fixed;
+}
 
 
 ::-webkit-scrollbar {
