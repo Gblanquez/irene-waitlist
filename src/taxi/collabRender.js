@@ -208,7 +208,7 @@ export default class collabRender extends Renderer {
 
     globalVerticalLinesReveal()
     globalLinesReveal()
-    formAnimation()
+    // formAnimation()
     bodyTextReveal()
     globalLinkHover()
     labelTextReveal()
