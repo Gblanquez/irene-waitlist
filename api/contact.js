@@ -13,8 +13,8 @@ export default async function handler(req, res) {
 
   try {
     const data = req.body
-    const tableName = 'Leads CRM'
-    const airtableUrl = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}`
+    const tableId = 'tblW4wnuXLbNlTxv4'
+    const airtableUrl = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${tableId}`
 
     const fieldMap = {
       name: 'name',
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         success: false,
         message: errorText,
         airtableUrl,
-        tableName
+        tableId
       })
     }
 
