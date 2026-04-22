@@ -138,7 +138,7 @@ body {
 
 .big-title.mob-large
 {
-    font-size: calc(68 / 480 * 100 * var(--vw)) !important;
+    font-size: calc(54 / 480 * 100 * var(--vw)) !important;
     line-height: 1.1;   
 }
 
