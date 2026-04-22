@@ -13,8 +13,6 @@ class SceneManager {
     this.meshes = []
     this.isInitialized = false
     this.textureLoader = new THREE.TextureLoader()
-    this.viewportWidth = window.innerWidth
-    this.viewportHeight = window.innerHeight
 
     sceneInstance = this
   }
@@ -24,21 +22,12 @@ class SceneManager {
     this.isInitialized = true
   }
 
-  setViewportSize(width, height) {
-    this.viewportWidth = width
-    this.viewportHeight = height
-
-    this.materials.forEach((material) => {
-      material.uniforms.uResolution.value.set(width, height)
-    })
-  }
-
   makeUniforms(texture, w, h) {
     return {
       uTexture: { value: texture },
       uTextureSize: { value: new THREE.Vector2(w, h) },
       uOpacity: { value: 1 },
-      uResolution: { value: new THREE.Vector2(this.viewportWidth, this.viewportHeight) },
+      uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
       uQuadSize: { value: new THREE.Vector2(1, 1) },
       time: { value: 0 }
     }
@@ -146,8 +135,8 @@ class SceneManager {
   }
 
   updateMeshPositions(camera, velocity = 0) {
-    const width = this.viewportWidth
-    const height = this.viewportHeight
+    const width = window.innerWidth
+    const height = window.innerHeight
 
     const fov = camera.fov * (Math.PI / 180)
     const dist = camera.position.z
