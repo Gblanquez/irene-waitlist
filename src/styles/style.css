@@ -136,6 +136,12 @@ body {
     line-height: 1.1;   
 }
 
+.big-title.mob-large
+{
+    font-size: calc(68 / 480 * 100 * var(--vw)) !important;
+    line-height: 1.1;   
+}
+
 .sub-head
 {
     font-size: calc(38 / 480 * 100 * var(--vw));
