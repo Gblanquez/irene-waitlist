@@ -20,7 +20,7 @@ export default class defaultRender extends Renderer {
 
     globalVerticalLinesReveal()
     globalLinesReveal()
-    // formAnimation()
+    formAnimation()
     bodyTextReveal()
     globalLinkHover()
     labelTextReveal()
