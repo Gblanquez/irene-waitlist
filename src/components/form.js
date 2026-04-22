@@ -10,6 +10,16 @@ let formOriginalParent = null
 let formOriginalNextSibling = null
 const contactEndpoint = import.meta.env.VITE_CONTACT_API_URL || ''
 
+function getFormEndpoint(form) {
+  return (
+    form.dataset.formEndpoint ||
+    form.dataset.aformEndpoint ||
+    form.getAttribute('data-form-endpoint') ||
+    form.getAttribute('data-aform-endpoint') ||
+    contactEndpoint
+  )
+}
+
 function detachFormHolder(formHolder) {
   if (!formHolder || activeFormHolder === formHolder) return
 
@@ -92,7 +102,7 @@ forms.forEach((form) => {
     })
 
     try {
-      const endpoint = form.dataset.formEndpoint || contactEndpoint
+      const endpoint = getFormEndpoint(form)
 
       if (!endpoint) {
         throw new Error('Missing form endpoint')
@@ -108,17 +118,26 @@ forms.forEach((form) => {
 
       if (res.ok) {
         // SUCCESS UI
+        const error = form.parentElement.querySelector('.w-form-fail')
+        if (error) error.style.display = 'none'
+
         form.style.display = 'none'
 
         const success = form.parentElement.querySelector('.w-form-done')
         if (success) success.style.display = 'block'
 
       } else {
-        throw new Error('Failed')
+        const errorText = await res.text()
+        throw new Error(errorText || 'Failed')
       }
 
     } catch (err) {
+      console.error('Form submission failed:', err)
+
       // ERROR UI
+      const success = form.parentElement.querySelector('.w-form-done')
+      if (success) success.style.display = 'none'
+
       const error = form.parentElement.querySelector('.w-form-fail')
       if (error) error.style.display = 'block'
     }

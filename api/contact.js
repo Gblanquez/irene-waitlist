@@ -1,4 +1,12 @@
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' })
   }
@@ -22,11 +30,13 @@ export default async function handler(req, res) {
     for (const key in data) {
       if (!fieldMap[key]) continue
 
+      const value = data[key]
+      if (value === '' || value == null) continue
+
       if (multiSelectFields.includes(key)) {
-        const value = data[key]
-        fields[fieldMap[key]] = Array.isArray(value) ? value : [value]
+        fields[fieldMap[key]] = Array.isArray(value) ? value.filter(Boolean) : [value]
       } else {
-        fields[fieldMap[key]] = data[key]
+        fields[fieldMap[key]] = value
       }
     }
 
@@ -45,12 +55,12 @@ export default async function handler(req, res) {
     if (!airtableRes.ok) {
       const errorText = await airtableRes.text()
       console.error(errorText)
-      throw new Error('Airtable error')
+      return res.status(500).json({ success: false, message: errorText })
     }
 
     return res.status(200).json({ success: true })
   } catch (err) {
     console.error(err)
-    return res.status(500).json({ success: false })
+    return res.status(500).json({ success: false, message: err.message })
   }
 }
