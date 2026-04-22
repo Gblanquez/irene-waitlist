@@ -144,7 +144,7 @@ body {
 
 .sub-head.mob-mid
 {
-    font-size: calc(54 / 480 * 100 * var(--vw)) !important;
+    font-size: calc(42 / 480 * 100 * var(--vw)) !important;
     line-height: 1.1;   
 }
   
