@@ -138,7 +138,7 @@ body {
 
     .mid-title.mob-x
 {
-    font-size: calc(32 / 1728 * 100 * var(--vw)) !important;
+    font-size: calc(32 / 480 * 100 * var(--vw)) !important;
     line-height: 1.1;   
 }
 
