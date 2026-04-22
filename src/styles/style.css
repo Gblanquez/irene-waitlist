@@ -49,6 +49,12 @@ body {
     line-height: 1.1;   
 }
 
+.sub-head
+{
+    font-size: calc(112 / 1728 * 100 * var(--vw));
+    line-height: 1.1;   
+}
+
 .title
 {
     font-size: calc(42 / 1728 * 100 * var(--vw));
@@ -115,7 +121,7 @@ body {
     }
   
     .body {
-      font-size: calc(16 / 480 * 100 * var(--vw));
+      font-size: calc(18 / 480 * 100 * var(--vw));
       line-height: 1.1;
     }
   
@@ -125,6 +131,12 @@ body {
     }
 
     .big-title
+{
+    font-size: calc(38 / 480 * 100 * var(--vw));
+    line-height: 1.1;   
+}
+
+.sub-head
 {
     font-size: calc(38 / 480 * 100 * var(--vw));
     line-height: 1.1;   
