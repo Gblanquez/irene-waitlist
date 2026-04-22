@@ -43,6 +43,12 @@ body {
     line-height: 1.1;   
 }
 
+.big-title
+{
+    font-size: calc(112 / 1728 * 100 * var(--vw));
+    line-height: 1.1;   
+}
+
 .title
 {
     font-size: calc(42 / 1728 * 100 * var(--vw));
@@ -109,14 +115,20 @@ body {
     }
   
     .body {
-      font-size: calc(18 / 480 * 100 * var(--vw));
+      font-size: calc(16 / 480 * 100 * var(--vw));
       line-height: 1.1;
     }
   
     .subtitle {
-      font-size: calc(26 / 480 * 100 * var(--vw));
+      font-size: calc(28 / 480 * 100 * var(--vw));
       line-height: 1.1;
     }
+
+    .big-title
+{
+    font-size: calc(38 / 480 * 100 * var(--vw));
+    line-height: 1.1;   
+}
   
     .title {
       font-size: calc(32 / 480 * 100 * var(--vw));
