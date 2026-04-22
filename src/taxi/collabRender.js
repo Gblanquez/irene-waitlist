@@ -20,6 +20,7 @@ export default class collabRender extends Renderer {
     this.thumbnailsPlaceholder = null
     this.thumbnailsOriginalParent = null
     this.thumbnailsOriginalNextSibling = null
+    this.thumbnailsDetached = false
     this.thumbnailLinks = []
     this.thumbnailItems = []
     this.thumbnailMark = null
@@ -37,7 +38,7 @@ export default class collabRender extends Renderer {
       return thumbnailsParent
     }
 
-    this.restoreThumbnailsToView()
+    this.cleanupDetachedThumbnails()
 
     this.thumbnailsParent = thumbnailsParent
     this.thumbnailsOriginalParent = thumbnailsParent.parentNode
@@ -49,6 +50,7 @@ export default class collabRender extends Renderer {
     }
 
     document.body.appendChild(thumbnailsParent)
+    this.thumbnailsDetached = true
     return thumbnailsParent
   }
 
@@ -71,6 +73,23 @@ export default class collabRender extends Renderer {
     this.thumbnailsPlaceholder = null
     this.thumbnailsOriginalParent = null
     this.thumbnailsOriginalNextSibling = null
+    this.thumbnailsDetached = false
+  }
+
+  cleanupDetachedThumbnails() {
+    if (this.thumbnailsPlaceholder?.parentNode) {
+      this.thumbnailsPlaceholder.parentNode.removeChild(this.thumbnailsPlaceholder)
+    }
+
+    if (this.thumbnailsParent?.parentNode === document.body) {
+      this.thumbnailsParent.parentNode.removeChild(this.thumbnailsParent)
+    }
+
+    this.thumbnailsParent = null
+    this.thumbnailsPlaceholder = null
+    this.thumbnailsOriginalParent = null
+    this.thumbnailsOriginalNextSibling = null
+    this.thumbnailsDetached = false
   }
 
   enforceThumbnailsFixed() {
@@ -244,13 +263,11 @@ export default class collabRender extends Renderer {
     stopRAF()
     if (this.thumbnailMark) {
       gsap.killTweensOf(this.thumbnailMark)
-      gsap.set(this.thumbnailMark, { x: 0, y: 0 })
     }
-    this.restoreThumbnailsToView()
   }
 
   onLeaveCompleted()
   {
-    this.restoreThumbnailsToView()
+    this.cleanupDetachedThumbnails()
   }
 }
