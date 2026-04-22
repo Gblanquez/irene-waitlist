@@ -13,18 +13,7 @@ import collabLinkPageHover from '../components/collaboratorLink.js'
 import SketchManager from '../sketch/sketch.js'
 
 export default class defaultRender extends Renderer {
-  reinitializeWebflow() {
-    if (!window.Webflow) return
 
-    window.Webflow.destroy()
-    window.Webflow.ready()
-
-    const forms = window.Webflow.require?.('forms')
-    forms?.ready?.()
-
-    const ix2 = window.Webflow.require?.('ix2')
-    ix2?.init?.()
-  }
 
   runPageSetup() {
     initScaling()
@@ -66,7 +55,7 @@ export default class defaultRender extends Renderer {
   }
 
   onEnterCompleted() {
-    this.reinitializeWebflow()
+
   }
 
   onLeave() {

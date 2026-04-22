@@ -8,6 +8,7 @@ let activeFormHolder = null
 let formPlaceholder = null
 let formOriginalParent = null
 let formOriginalNextSibling = null
+const contactEndpoint = import.meta.env.VITE_CONTACT_API_URL || ''
 
 function detachFormHolder(formHolder) {
   if (!formHolder || activeFormHolder === formHolder) return
@@ -64,6 +65,65 @@ export default function formAnimation() {
   const formContainer = document.querySelector('.form-content-parent')
   const ctas = document.querySelectorAll('[data-a="form"]')
   const closeButton = document.querySelector('[data-a="close-form"]')
+
+
+
+  const forms = document.querySelectorAll('form')
+
+forms.forEach((form) => {
+  if (form.dataset.bound === 'true') return
+  form.dataset.bound = 'true'
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.stopImmediatePropagation?.()
+
+    // Collect data (IMPORTANT: handles multi-select)
+    const formData = new FormData(form)
+    const data = {}
+
+    formData.forEach((value, key) => {
+      if (data[key]) {
+        data[key] = [].concat(data[key], value)
+      } else {
+        data[key] = value
+      }
+    })
+
+    try {
+      const endpoint = form.dataset.formEndpoint || contactEndpoint
+
+      if (!endpoint) {
+        throw new Error('Missing form endpoint')
+      }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+
+      if (res.ok) {
+        // SUCCESS UI
+        form.style.display = 'none'
+
+        const success = form.parentElement.querySelector('.w-form-done')
+        if (success) success.style.display = 'block'
+
+      } else {
+        throw new Error('Failed')
+      }
+
+    } catch (err) {
+      // ERROR UI
+      const error = form.parentElement.querySelector('.w-form-fail')
+      if (error) error.style.display = 'block'
+    }
+  }, true)
+})
 
   if (!formHolder || !formContainer) return
 
