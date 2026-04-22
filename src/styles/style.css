@@ -142,9 +142,9 @@ body {
     line-height: 1.1;   
 }
 
-.sub-head
+.sub-head.mob-mid
 {
-    font-size: calc(38 / 480 * 100 * var(--vw));
+    font-size: calc(54 / 480 * 100 * var(--vw)) !important;
     line-height: 1.1;   
 }
   
