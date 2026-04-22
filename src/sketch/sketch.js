@@ -17,6 +17,52 @@ class SketchManager {
     this.isInitialized = false
     this.velocity = 0
     this.smoothVelocity = 0
+    this.viewportWidth = window.innerWidth
+    this.viewportHeight = window.innerHeight
+    this.resizeTimeout = null
+    this.handleResize = this.handleResize.bind(this)
+  }
+
+  getViewportSize() {
+    const viewport = window.visualViewport
+
+    return {
+      width: Math.round(viewport?.width || window.innerWidth),
+      height: Math.round(viewport?.height || window.innerHeight),
+    }
+  }
+
+  isMobileViewport() {
+    return window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768
+  }
+
+  applyResize(width, height) {
+    if (!this.camera || !this.renderer) return
+
+    this.viewportWidth = width
+    this.viewportHeight = height
+
+    this.camera.aspect = width / height
+    this.camera.updateProjectionMatrix()
+    this.renderer.setSize(width, height, false)
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobileViewport() ? 1.5 : 2))
+    globalSceneManager.setViewportSize(width, height)
+  }
+
+  handleResize() {
+    const { width, height } = this.getViewportSize()
+    const widthDelta = Math.abs(width - this.viewportWidth)
+
+    if (!this.isMobileViewport() || widthDelta > 80) {
+      clearTimeout(this.resizeTimeout)
+      this.applyResize(width, height)
+      return
+    }
+
+    clearTimeout(this.resizeTimeout)
+    this.resizeTimeout = window.setTimeout(() => {
+      this.applyResize(width, height)
+    }, 180)
   }
 
   init(container) {
@@ -36,8 +82,9 @@ class SketchManager {
 
     this.scene = new THREE.Scene()
 
-    const w = window.innerWidth
-    const h = window.innerHeight
+    const { width: w, height: h } = this.getViewportSize()
+    this.viewportWidth = w
+    this.viewportHeight = h
 
     this.camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000)
     this.camera.position.z = 5
@@ -48,15 +95,17 @@ class SketchManager {
       antialias: true
     })
 
-    this.renderer.setSize(w, h)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.setSize(w, h, false)
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobileViewport() ? 1.5 : 2))
 
     globalSceneManager.init(this.canvas, this.camera)
+    globalSceneManager.setViewportSize(w, h)
     globalSceneManager.updateMeshes()
 
     this.createMeshes()
 
-    window.addEventListener('resize', () => this.resize())
+    window.addEventListener('resize', this.handleResize)
+    window.visualViewport?.addEventListener('resize', this.handleResize)
 
     this.isInitialized = true
     this.animate()
@@ -111,16 +160,6 @@ class SketchManager {
   updateMeshPositions() {
     this.smoothVelocity += (this.velocity - this.smoothVelocity) * 0.1
     globalSceneManager.updateMeshPositions(this.camera, this.smoothVelocity)
-  }
-
-  resize() {
-    const w = window.innerWidth
-    const h = window.innerHeight
-
-    this.camera.aspect = w / h
-    this.camera.updateProjectionMatrix()
-    this.renderer.setSize(w, h)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   }
 
   animate() {
