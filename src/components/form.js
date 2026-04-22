@@ -11,11 +11,20 @@ let formOriginalNextSibling = null
 const contactEndpoint = import.meta.env.VITE_CONTACT_API_URL || ''
 
 function getFormEndpoint(form) {
+  const wrapper = form.closest('.w-form')
+
   return (
     form.dataset.formEndpoint ||
     form.dataset.aformEndpoint ||
     form.getAttribute('data-form-endpoint') ||
     form.getAttribute('data-aform-endpoint') ||
+    form.getAttribute('data-redirect') ||
+    form.getAttribute('redirect') ||
+    wrapper?.dataset.formEndpoint ||
+    wrapper?.dataset.aformEndpoint ||
+    wrapper?.getAttribute('data-form-endpoint') ||
+    wrapper?.getAttribute('data-aform-endpoint') ||
+    form.getAttribute('action') ||
     contactEndpoint
   )
 }
