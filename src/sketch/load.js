@@ -72,7 +72,7 @@ class LoadManager {
 
       const html = await response.text()
       const doc = new DOMParser().parseFromString(html, 'text/html')
-      await this.preloadImages(doc, undefined, url)
+      await this.preloadAssets(doc, undefined, url)
     } catch {
       this.prefetchedUrls.delete(url)
     }
@@ -113,9 +113,31 @@ class LoadManager {
     return Array.from(urls.values())
   }
 
-  preloadImages(root = document, onProgress, baseUrl = window.location.href) {
-    const imageUrls = this.collectImageUrls(root, baseUrl)
-    const total = imageUrls.length
+  collectVideoUrls(root = document, baseUrl = window.location.href) {
+    const wraps = Array.from(root.querySelectorAll('.img-wrap'))
+    const urls = new Map()
+
+    wraps.forEach((wrap) => {
+      const src = wrap.getAttribute('data-video-src')
+      if (!src) return
+
+      try {
+        const absoluteUrl = new URL(src, baseUrl).href
+        urls.set(absoluteUrl, absoluteUrl)
+      } catch {
+        urls.set(src, src)
+      }
+    })
+
+    return Array.from(urls.values())
+  }
+
+  preloadAssets(root = document, onProgress, baseUrl = window.location.href) {
+    const assets = [
+      ...this.collectImageUrls(root, baseUrl).map((src) => ({ type: 'image', src })),
+      ...this.collectVideoUrls(root, baseUrl).map((src) => ({ type: 'video', src })),
+    ]
+    const total = assets.length
 
     if (!total) {
       onProgress?.(1, 0, 0)
@@ -130,27 +152,57 @@ class LoadManager {
       onProgress?.(loaded / total, loaded, total)
     }
 
-    return Promise.all(imageUrls.map((url) => new Promise((resolve) => {
-      const image = new Image()
-      image.decoding = 'async'
-      image.onload = () => {
-        markLoaded()
-        resolve()
-      }
-      image.onerror = () => {
-        markLoaded()
-        resolve()
-      }
-      image.src = url
+    return Promise.all(assets.map((asset) => {
+      if (asset.type === 'video') {
+        return new Promise((resolve) => {
+          const video = document.createElement('video')
+          let settled = false
 
-      if (image.complete) {
-        markLoaded()
-        resolve()
+          const complete = () => {
+            if (settled) return
+            settled = true
+            markLoaded()
+            resolve()
+          }
+
+          video.preload = 'auto'
+          video.muted = true
+          video.playsInline = true
+          video.crossOrigin = 'anonymous'
+          video.addEventListener('loadeddata', complete, { once: true })
+          video.addEventListener('canplaythrough', complete, { once: true })
+          video.addEventListener('error', complete, { once: true })
+          video.src = asset.src
+          video.load()
+
+          window.setTimeout(complete, 8000)
+        })
       }
-    })))
+
+      return new Promise((resolve) => {
+        const image = new Image()
+        let settled = false
+
+        const complete = () => {
+          if (settled) return
+          settled = true
+          markLoaded()
+          resolve()
+        }
+
+        image.decoding = 'async'
+        image.onload = complete
+        image.onerror = complete
+        image.src = asset.src
+
+        if (image.complete) {
+          complete()
+        }
+      })
+    }))
   }
 
-  async runInitialLoad(pageWrapper) {
+  async runInitialLoad(pageWrapper, onBeforeReveal) {
     if (this.hasCompletedInitialLoad) return
 
     this.ensureOverlay()
@@ -173,11 +225,15 @@ class LoadManager {
       this.label.textContent = '0'
     }
 
-    await this.preloadImages(document, (progress) => {
+    await this.preloadAssets(document, (progress) => {
       this.updateProgress(progress)
     })
 
     this.updateProgress(1)
+
+    if (onBeforeReveal) {
+      await onBeforeReveal()
+    }
 
     await new Promise((resolve) => {
       const tl = gsap.timeline({ onComplete: resolve })

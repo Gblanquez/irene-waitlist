@@ -475,16 +475,16 @@ export default class collabRender extends Renderer {
       const container = document.querySelector('.page-wrapper')
       initScaling()
 
-      await LoadManager.runInitialLoad(container)
+      await LoadManager.runInitialLoad(container, async () => {
+        startRAF()
 
-      startRAF()
+        if (container) {
+          SketchManager.init(container)
+        }
 
-      if (container) {
-        SketchManager.init(container)
-      }
-
-      this.setupScrollHandlers()
-      this.runPageSetup()
+        this.setupScrollHandlers()
+        this.runPageSetup()
+      })
     }
 
     boot()

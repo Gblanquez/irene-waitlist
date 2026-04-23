@@ -37,19 +37,19 @@ export default class defaultRender extends Renderer {
       const container = document.querySelector('.page-wrapper')
       initScaling()
 
-      await LoadManager.runInitialLoad(container)
+      await LoadManager.runInitialLoad(container, async () => {
+        startRAF()
 
-      startRAF()
+        if (container) {
+          SketchManager.init(container)
 
-      if (container) {
-        SketchManager.init(container)
+          setOnScrollUpdate(({ velocity }) => {
+            SketchManager.setVelocity(velocity)
+          })
+        }
 
-        setOnScrollUpdate(({ velocity }) => {
-          SketchManager.setVelocity(velocity)
-        })
-      }
-
-      this.runPageSetup()
+        this.runPageSetup()
+      })
     }
 
     boot()
