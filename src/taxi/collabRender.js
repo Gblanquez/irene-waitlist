@@ -216,8 +216,8 @@ export default class collabRender extends Renderer {
 
       content.lines = content.splits.flatMap((split) => split.lines || [])
 
-      gsap.set(content.element, { autoAlpha: 0 })
-      gsap.set(content.lines, { yPercent: 100, opacity: 0 })
+      gsap.set(content.element, { autoAlpha: 1 })
+      gsap.set(content.lines, { yPercent: 100, opacity: 1 })
     })
   }
 
