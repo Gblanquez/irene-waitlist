@@ -12,6 +12,9 @@ import globalLinkPageHover from '../components/globalLinks.js'
 import collabLinkPageHover from '../components/collaboratorLink.js'
 import SketchManager from '../sketch/sketch.js'
 import gsap from 'gsap'
+import { SplitText } from 'gsap/SplitText'
+
+gsap.registerPlugin(SplitText)
 
 export default class collabRender extends Renderer {
   constructor(...args) {
@@ -28,6 +31,12 @@ export default class collabRender extends Renderer {
     this.thumbnailMarkBaseY = 0
     this.thumbnailMarkMoveX = null
     this.thumbnailMarkMoveY = null
+    this.collabContents = []
+    this.collabContentMap = new Map()
+    this.collabContentPlaceholderMap = new Map()
+    this.collabLinkHandlers = []
+    this.collabHoverId = null
+    this.activeCollabContentId = null
   }
 
   detachThumbnailsFromTaxiView() {
@@ -115,6 +124,196 @@ export default class collabRender extends Renderer {
 
     return Array.from(thumbnailsParent.children)
       .filter((element) => element.nodeType === 1 && !element.classList.contains('thumbnail-mark'))
+  }
+
+  detachCollabContentsFromTaxiView() {
+    const contentElements = Array.from(document.querySelectorAll('.collab-content'))
+    if (!contentElements.length) return
+
+    this.cleanupDetachedCollabContents()
+
+    this.collabContents = contentElements
+      .filter((element) => element.id)
+      .map((element) => {
+        const placeholder = document.createComment(`collab-content-placeholder-${element.id}`)
+        const originalParent = element.parentNode
+        const originalNextSibling = element.nextSibling
+
+        if (originalParent) {
+          originalParent.insertBefore(placeholder, element)
+        }
+
+        document.body.appendChild(element)
+        element.classList.remove('hide')
+        element.style.setProperty('position', 'fixed', 'important')
+        element.style.pointerEvents = 'none'
+        element.style.willChange = 'opacity, transform'
+
+        return {
+          id: element.id,
+          element,
+          placeholder,
+          originalParent,
+          originalNextSibling,
+          splits: [],
+          lines: [],
+        }
+      })
+
+    this.collabContentMap = new Map(this.collabContents.map((item) => [item.id, item]))
+  }
+
+  cleanupDetachedCollabContents() {
+    this.collabLinkHandlers.forEach(({ link, enter, leave }) => {
+      link.removeEventListener('mouseenter', enter)
+      link.removeEventListener('mouseleave', leave)
+    })
+    this.collabLinkHandlers = []
+
+    this.collabContents.forEach((content) => {
+      content.splits.forEach((split) => {
+        if (split && !split._isReverted) {
+          split.revert()
+          split._isReverted = true
+        }
+      })
+
+      if (content.placeholder?.parentNode) {
+        content.placeholder.parentNode.removeChild(content.placeholder)
+      }
+
+      if (content.element?.parentNode === document.body) {
+        content.element.parentNode.removeChild(content.element)
+      }
+    })
+
+    this.collabContents = []
+    this.collabContentMap.clear()
+    this.collabHoverId = null
+    this.activeCollabContentId = null
+  }
+
+  prepareCollabContents() {
+    this.collabContents.forEach((content) => {
+      const textTargets = Array.from(content.element.querySelectorAll('.content-child'))
+        .filter((element) => element.textContent?.trim())
+
+      content.splits = textTargets.map((element) => {
+        const split = SplitText.create(element, {
+          type: 'lines',
+          mask: 'lines',
+        })
+
+        split._isReverted = false
+        return split
+      })
+
+      content.lines = content.splits.flatMap((split) => split.lines || [])
+
+      gsap.set(content.element, { autoAlpha: 0 })
+      gsap.set(content.lines, { yPercent: 100, opacity: 0 })
+    })
+  }
+
+  getCenteredCollabId() {
+    if (!this.thumbnailLinks.length) return null
+
+    const viewportCenter = window.innerHeight * 0.5
+
+    return this.thumbnailLinks.reduce((closest, link) => {
+      if (!link.id) return closest
+
+      const rect = link.getBoundingClientRect()
+      const linkCenter = rect.top + (rect.height * 0.5)
+      const distance = Math.abs(linkCenter - viewportCenter)
+
+      if (distance < closest.distance) {
+        return { id: link.id, distance }
+      }
+
+      return closest
+    }, { id: this.thumbnailLinks[0]?.id || null, distance: Number.POSITIVE_INFINITY }).id
+  }
+
+  showCollabContentById(id, immediate = false) {
+    if (!id || id === this.activeCollabContentId) return
+
+    const nextContent = this.collabContentMap.get(id)
+    if (!nextContent) return
+
+    const previousContent = this.collabContentMap.get(this.activeCollabContentId)
+
+    if (previousContent) {
+      gsap.killTweensOf(previousContent.element)
+      gsap.killTweensOf(previousContent.lines)
+      gsap.to(previousContent.lines, {
+        yPercent: -100,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.in',
+        stagger: 0.02,
+      })
+      gsap.to(previousContent.element, {
+        autoAlpha: 0,
+        duration: 0.2,
+        ease: 'power2.out',
+      })
+    }
+
+    gsap.killTweensOf(nextContent.element)
+    gsap.killTweensOf(nextContent.lines)
+    gsap.set(nextContent.element, { autoAlpha: 1 })
+
+    if (immediate) {
+      gsap.set(nextContent.lines, { yPercent: 0, opacity: 1 })
+    } else {
+      gsap.fromTo(nextContent.lines, {
+        yPercent: 100,
+        opacity: 0,
+      }, {
+        yPercent: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+        stagger: 0.04,
+      })
+    }
+
+    this.activeCollabContentId = id
+  }
+
+  updateActiveCollabContent(immediate = false) {
+    const nextId = this.collabHoverId || this.getCenteredCollabId()
+    if (!nextId) return
+
+    this.showCollabContentById(nextId, immediate)
+  }
+
+  setupCollabContentSync() {
+    this.detachCollabContentsFromTaxiView()
+    if (!this.collabContents.length) return
+
+    this.prepareCollabContents()
+
+    this.thumbnailLinks.forEach((link) => {
+      if (!link.id) return
+
+      const enter = () => {
+        this.collabHoverId = link.id
+        this.updateActiveCollabContent()
+      }
+
+      const leave = () => {
+        this.collabHoverId = null
+        this.updateActiveCollabContent()
+      }
+
+      link.addEventListener('mouseenter', enter)
+      link.addEventListener('mouseleave', leave)
+      this.collabLinkHandlers.push({ link, enter, leave })
+    })
+
+    this.updateActiveCollabContent(true)
   }
 
   setupThumbnailSync() {
@@ -207,10 +406,12 @@ export default class collabRender extends Renderer {
     const y = -progress * window.innerWidth * 0.5
     thumbnailsParent.style.transform = `translate3d(0, ${y}px, 0)`
     this.updateActiveThumbnail()
+    this.updateActiveCollabContent()
   }
 
   setupScrollHandlers() {
     this.setupThumbnailSync()
+    this.setupCollabContentSync()
 
     setOnScrollUpdate(({ velocity, progress }) => {
       SketchManager.setVelocity(velocity)
@@ -269,5 +470,6 @@ export default class collabRender extends Renderer {
   onLeaveCompleted()
   {
     this.cleanupDetachedThumbnails()
+    this.cleanupDetachedCollabContents()
   }
 }
