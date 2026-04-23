@@ -29,7 +29,10 @@ body {
     display: none;
   }
 
-
+.load-parent
+{
+    display: flex;
+}
 
 .body
 {

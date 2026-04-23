@@ -13,6 +13,7 @@ import collabLinkPageHover from '../components/collaboratorLink.js'
 import SketchManager from '../sketch/sketch.js'
 import gsap from 'gsap'
 import { SplitText } from 'gsap/SplitText'
+import LoadManager from '../sketch/load.js'
 
 gsap.registerPlugin(SplitText)
 
@@ -470,15 +471,23 @@ export default class collabRender extends Renderer {
   }
 
   initialLoad() {
-    startRAF()
+    const boot = async () => {
+      const container = document.querySelector('.page-wrapper')
+      initScaling()
 
-    const container = document.querySelector('.page-wrapper')
-    if (container) {
-      SketchManager.init(container)
+      await LoadManager.runInitialLoad(container)
+
+      startRAF()
+
+      if (container) {
+        SketchManager.init(container)
+      }
+
+      this.setupScrollHandlers()
+      this.runPageSetup()
     }
 
-    this.setupScrollHandlers()
-    this.runPageSetup()
+    boot()
   }
 
   onEnter() {

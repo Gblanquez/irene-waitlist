@@ -11,6 +11,7 @@ import globalLinkHover from '../components/linksHover.js'
 import globalLinkPageHover from '../components/globalLinks.js'
 import collabLinkPageHover from '../components/collaboratorLink.js'
 import SketchManager from '../sketch/sketch.js'
+import LoadManager from '../sketch/load.js'
 
 export default class defaultRender extends Renderer {
 
@@ -31,24 +32,28 @@ export default class defaultRender extends Renderer {
     collabLinkPageHover()
   }
 
-    initialLoad()
-     {
+  initialLoad() {
+    const boot = async () => {
+      const container = document.querySelector('.page-wrapper')
+      initScaling()
+
+      await LoadManager.runInitialLoad(container)
 
       startRAF()
 
-      const container = document.querySelector('.page-wrapper')
-
       if (container) {
-      SketchManager.init(container)
-    
-  
-  
-    setOnScrollUpdate(({ velocity }) => {
-      SketchManager.setVelocity(velocity)
-    })
+        SketchManager.init(container)
+
+        setOnScrollUpdate(({ velocity }) => {
+          SketchManager.setVelocity(velocity)
+        })
       }
+
       this.runPageSetup()
-      }
+    }
+
+    boot()
+  }
   onEnter() {
     startRAF()
     this.runPageSetup()

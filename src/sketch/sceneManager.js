@@ -12,7 +12,11 @@ class SceneManager {
     this.materials = new Map()
     this.meshes = []
     this.isInitialized = false
-    this.textureLoader = new THREE.TextureLoader()
+    this.loadingManager = new THREE.LoadingManager()
+    this.textureLoader = new THREE.TextureLoader(this.loadingManager)
+    this.textureLoader.setCrossOrigin('anonymous')
+    this.textureEntries = new Map()
+    this.videoEntries = new Map()
 
     sceneInstance = this
   }
@@ -44,34 +48,46 @@ class SceneManager {
     })
   }
 
-  createMaterial(src) {
-    if (this.materials.has(src)) return this.materials.get(src)
+  getTextureEntry(src) {
+    if (this.textureEntries.has(src)) return this.textureEntries.get(src)
 
     const material = this.makeMaterial(this.makeUniforms(null, 1, 1))
+    const entry = {
+      material,
+      status: 'loading',
+      promise: null,
+    }
 
-    this.textureLoader.setCrossOrigin('anonymous')
+    entry.promise = new Promise((resolve) => {
+      this.textureLoader.load(src, (texture) => {
+        texture.minFilter = THREE.LinearFilter
+        texture.magFilter = THREE.LinearFilter
+        texture.generateMipmaps = false
 
-    this.textureLoader.load(src, (texture) => {
-      texture.minFilter = THREE.LinearFilter
-      texture.magFilter = THREE.LinearFilter
-      texture.generateMipmaps = false
-
-      material.uniforms.uTexture.value = texture
-      material.uniforms.uTextureSize.value.set(texture.image.width, texture.image.height)
+        material.uniforms.uTexture.value = texture
+        material.uniforms.uTextureSize.value.set(texture.image.width, texture.image.height)
+        entry.status = 'loaded'
+        resolve(material)
+      }, undefined, () => {
+        entry.status = 'error'
+        resolve(material)
+      })
     })
 
+    this.textureEntries.set(src, entry)
     this.materials.set(src, material)
-    return material
+    return entry
   }
 
-  createVideoMaterial(src) {
-    if (this.materials.has(src)) return this.materials.get(src)
+  createMaterial(src) {
+    return this.getTextureEntry(src).material
+  }
+
+  getVideoEntry(src) {
+    if (this.videoEntries.has(src)) return this.videoEntries.get(src)
 
     const video = document.createElement('video')
-
-
     video.crossOrigin = 'anonymous'
-
     video.src = src
     video.muted = true
     video.loop = true
@@ -90,22 +106,103 @@ class SceneManager {
     video.play().catch(() => {})
 
     const material = this.makeMaterial(this.makeUniforms(null, 1920, 1080))
+    const entry = {
+      material,
+      video,
+      status: 'loading',
+      promise: null,
+    }
 
-    video.addEventListener('loadeddata', () => {
-      const texture = new THREE.VideoTexture(video)
+    entry.promise = new Promise((resolve) => {
+      const complete = () => {
+        const texture = new THREE.VideoTexture(video)
 
+        texture.minFilter = THREE.LinearFilter
+        texture.magFilter = THREE.LinearFilter
+        texture.generateMipmaps = false
+        texture.format = THREE.RGBAFormat
 
-      texture.minFilter = THREE.LinearFilter
-      texture.magFilter = THREE.LinearFilter
-      texture.generateMipmaps = false
-      texture.format = THREE.RGBAFormat
+        material.uniforms.uTexture.value = texture
+        material.uniforms.uTextureSize.value.set(video.videoWidth || 1920, video.videoHeight || 1080)
+        entry.status = 'loaded'
+        resolve(material)
+      }
 
-      material.uniforms.uTexture.value = texture
-      material.uniforms.uTextureSize.value.set(video.videoWidth, video.videoHeight)
-    }, { once: true })
+      video.addEventListener('loadeddata', complete, { once: true })
+      video.addEventListener('error', () => {
+        entry.status = 'error'
+        resolve(material)
+      }, { once: true })
+    })
 
+    this.videoEntries.set(src, entry)
     this.materials.set(src, material)
-    return material
+    return entry
+  }
+
+  createVideoMaterial(src) {
+    return this.getVideoEntry(src).material
+  }
+
+  resolveAssetUrl(src, baseUrl = window.location.href) {
+    try {
+      return new URL(src, baseUrl).href
+    } catch {
+      return src
+    }
+  }
+
+  collectMeshAssets(root = document, baseUrl = window.location.href) {
+    const wraps = Array.from(root.querySelectorAll('.img-wrap'))
+    const assetMap = new Map()
+
+    wraps.forEach((wrap) => {
+      const videoSrc = wrap.getAttribute('data-video-src')
+      const img = wrap.querySelector('.img')
+
+      if (videoSrc) {
+        const src = this.resolveAssetUrl(videoSrc, baseUrl)
+        assetMap.set(`video:${src}`, { type: 'video', src })
+        return
+      }
+
+      const imageSrc = img?.getAttribute('src')
+      if (!imageSrc) return
+
+      const src = this.resolveAssetUrl(imageSrc, baseUrl)
+      assetMap.set(`image:${src}`, { type: 'image', src })
+    })
+
+    return Array.from(assetMap.values())
+  }
+
+  preloadAssetDescriptors(assets = [], onProgress) {
+    const total = assets.length
+    if (!total) {
+      onProgress?.(1, 0, 0)
+      return Promise.resolve()
+    }
+
+    let loaded = 0
+    onProgress?.(0, 0, total)
+
+    const markLoaded = () => {
+      loaded += 1
+      onProgress?.(loaded / total, loaded, total)
+    }
+
+    return Promise.all(assets.map((asset) => {
+      const entry = asset.type === 'video'
+        ? this.getVideoEntry(asset.src)
+        : this.getTextureEntry(asset.src)
+
+      return entry.promise.finally(markLoaded)
+    }))
+  }
+
+  preloadMeshes(root = document, onProgress, baseUrl = window.location.href) {
+    const assets = this.collectMeshAssets(root, baseUrl)
+    return this.preloadAssetDescriptors(assets, onProgress)
   }
 
   updateMeshes() {
