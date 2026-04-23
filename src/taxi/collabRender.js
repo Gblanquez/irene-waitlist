@@ -295,7 +295,7 @@ export default class collabRender extends Renderer {
     this.showCollabContentById(nextId, immediate)
   }
 
-  scheduleScrollDrivenCollabContentUpdate(delay = 5) {
+  scheduleScrollDrivenCollabContentUpdate(delay = 1) {
     if (this.collabHoverId) return
 
     if (this.collabContentSwitchTimeout) return
@@ -327,7 +327,7 @@ export default class collabRender extends Renderer {
 
       const leave = () => {
         this.collabHoverId = null
-        this.scheduleScrollDrivenCollabContentUpdate(5)
+        this.scheduleScrollDrivenCollabContentUpdate(1)
       }
 
       link.addEventListener('mouseenter', enter)
