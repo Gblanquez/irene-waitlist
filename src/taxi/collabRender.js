@@ -37,6 +37,7 @@ export default class collabRender extends Renderer {
     this.collabLinkHandlers = []
     this.collabHoverId = null
     this.activeCollabContentId = null
+    this.collabContentSwitchTimeout = null
   }
 
   detachThumbnailsFromTaxiView() {
@@ -164,6 +165,11 @@ export default class collabRender extends Renderer {
   }
 
   cleanupDetachedCollabContents() {
+    if (this.collabContentSwitchTimeout) {
+      clearTimeout(this.collabContentSwitchTimeout)
+      this.collabContentSwitchTimeout = null
+    }
+
     this.collabLinkHandlers.forEach(({ link, enter, leave }) => {
       link.removeEventListener('mouseenter', enter)
       link.removeEventListener('mouseleave', leave)
@@ -289,6 +295,17 @@ export default class collabRender extends Renderer {
     this.showCollabContentById(nextId, immediate)
   }
 
+  scheduleScrollDrivenCollabContentUpdate(delay = 5) {
+    if (this.collabHoverId) return
+
+    if (this.collabContentSwitchTimeout) return
+
+    this.collabContentSwitchTimeout = window.setTimeout(() => {
+      this.updateActiveCollabContent()
+      this.collabContentSwitchTimeout = null
+    }, delay)
+  }
+
   setupCollabContentSync() {
     this.detachCollabContentsFromTaxiView()
     if (!this.collabContents.length) return
@@ -299,13 +316,18 @@ export default class collabRender extends Renderer {
       if (!link.id) return
 
       const enter = () => {
+        if (this.collabContentSwitchTimeout) {
+          clearTimeout(this.collabContentSwitchTimeout)
+          this.collabContentSwitchTimeout = null
+        }
+
         this.collabHoverId = link.id
         this.updateActiveCollabContent()
       }
 
       const leave = () => {
         this.collabHoverId = null
-        this.updateActiveCollabContent()
+        this.scheduleScrollDrivenCollabContentUpdate(5)
       }
 
       link.addEventListener('mouseenter', enter)
@@ -406,7 +428,6 @@ export default class collabRender extends Renderer {
     const y = -progress * window.innerWidth * 0.5
     thumbnailsParent.style.transform = `translate3d(0, ${y}px, 0)`
     this.updateActiveThumbnail()
-    this.updateActiveCollabContent()
   }
 
   setupScrollHandlers() {
@@ -415,6 +436,17 @@ export default class collabRender extends Renderer {
 
     setOnScrollUpdate(({ velocity, progress }) => {
       SketchManager.setVelocity(velocity)
+
+      if (Math.abs(velocity) > 0.01) {
+        this.collabHoverId = null
+        if (this.collabContentSwitchTimeout) {
+          clearTimeout(this.collabContentSwitchTimeout)
+          this.collabContentSwitchTimeout = null
+        }
+      } else {
+        this.scheduleScrollDrivenCollabContentUpdate()
+      }
+
       this.updateThumbnails(progress)
     })
 
@@ -462,6 +494,10 @@ export default class collabRender extends Renderer {
 
   onLeave() {
     stopRAF()
+    if (this.collabContentSwitchTimeout) {
+      clearTimeout(this.collabContentSwitchTimeout)
+      this.collabContentSwitchTimeout = null
+    }
     if (this.thumbnailMark) {
       gsap.killTweensOf(this.thumbnailMark)
     }
