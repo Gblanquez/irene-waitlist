@@ -30,7 +30,7 @@ class LoadManager {
 
     gsap.to(this.progressValue, {
       value: target,
-      duration: 0.2,
+      duration: 0.28,
       ease: 'power2.out',
       overwrite: true,
       onUpdate: () => {
@@ -39,6 +39,30 @@ class LoadManager {
         }
       },
     })
+  }
+
+  waitMinimumDuration(duration = 1800) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, duration)
+    })
+  }
+
+  waitForWindowLoad() {
+    if (document.readyState === 'complete') {
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve) => {
+      window.addEventListener('load', () => resolve(), { once: true })
+    })
+  }
+
+  waitForFonts() {
+    if (document.fonts?.ready) {
+      return document.fonts.ready.catch(() => undefined)
+    }
+
+    return Promise.resolve()
   }
 
   getTaxiPrefetchUrls() {
@@ -137,7 +161,11 @@ class LoadManager {
       ...this.collectImageUrls(root, baseUrl).map((src) => ({ type: 'image', src })),
       ...this.collectVideoUrls(root, baseUrl).map((src) => ({ type: 'video', src })),
     ]
-    const total = assets.length
+    const readinessTasks = [
+      { type: 'font-ready' },
+      { type: 'window-load' },
+    ]
+    const total = assets.length + readinessTasks.length
 
     if (!total) {
       onProgress?.(1, 0, 0)
@@ -152,7 +180,7 @@ class LoadManager {
       onProgress?.(loaded / total, loaded, total)
     }
 
-    return Promise.all(assets.map((asset) => {
+    const assetPromises = assets.map((asset) => {
       if (asset.type === 'video') {
         return new Promise((resolve) => {
           const video = document.createElement('video')
@@ -169,13 +197,17 @@ class LoadManager {
           video.muted = true
           video.playsInline = true
           video.crossOrigin = 'anonymous'
-          video.addEventListener('loadeddata', complete, { once: true })
           video.addEventListener('canplaythrough', complete, { once: true })
           video.addEventListener('error', complete, { once: true })
           video.src = asset.src
           video.load()
 
-          window.setTimeout(complete, 8000)
+          if (video.readyState >= 4) {
+            complete()
+            return
+          }
+
+          window.setTimeout(complete, 12000)
         })
       }
 
@@ -199,7 +231,17 @@ class LoadManager {
           complete()
         }
       })
-    }))
+    })
+
+    const readinessPromises = readinessTasks.map((task) => {
+      if (task.type === 'font-ready') {
+        return this.waitForFonts().finally(markLoaded)
+      }
+
+      return this.waitForWindowLoad().finally(markLoaded)
+    })
+
+    return Promise.all([...assetPromises, ...readinessPromises])
   }
 
   async runInitialLoad(pageWrapper, onBeforeReveal) {
@@ -225,9 +267,12 @@ class LoadManager {
       this.label.textContent = '0'
     }
 
-    await this.preloadAssets(document, (progress) => {
-      this.updateProgress(progress)
-    })
+    await Promise.all([
+      this.preloadAssets(document, (progress) => {
+        this.updateProgress(progress)
+      }),
+      this.waitMinimumDuration(1800),
+    ])
 
     this.updateProgress(1)
 
@@ -250,9 +295,9 @@ class LoadManager {
       if (pageWrapper) {
         tl.to(pageWrapper, {
           opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
-        }, this.label ? 0.1 : 0)
+          duration: 1.1,
+          ease: 'power3.out',
+        }, this.label ? 0.25 : 0)
       }
 
       if (this.overlay) {
