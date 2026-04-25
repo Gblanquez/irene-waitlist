@@ -12,11 +12,24 @@ import globalLinkPageHover from '../components/globalLinks.js'
 import collabLinkPageHover from '../components/collaboratorLink.js'
 import SketchManager from '../sketch/sketch.js'
 import LoadManager from '../sketch/load.js'
+import gsap from 'gsap'
 
 export default class defaultRender extends Renderer {
+  prepareInitialTextState() {
+    gsap.set('[data-a="body-text"], [data-a="title-text"], [data-a="label-text"]', {
+      autoAlpha: 0,
+      yPercent: 100,
+    })
+  }
 
 
   runPageSetup() {
+    gsap.set('[data-a="body-text"], [data-a="title-text"], [data-a="label-text"]', {
+      autoAlpha: 1,
+      yPercent: 0,
+      clearProps: 'opacity,visibility,transform',
+    })
+
     initScaling()
     SketchManager.refreshMeshes()
     SketchManager.revealMeshes()
@@ -36,8 +49,9 @@ export default class defaultRender extends Renderer {
     const boot = async () => {
       const container = document.querySelector('.page-wrapper')
       initScaling()
+      this.prepareInitialTextState()
 
-      await LoadManager.runInitialLoad(container, async () => {
+      await LoadManager.runInitialLoad(container, () => {
         startRAF()
 
         if (container) {

@@ -30,18 +30,31 @@ class LoadManager {
 
     gsap.to(this.progressValue, {
       value: target,
-      duration: 0.28,
+      duration: 0.45,
       ease: 'power2.out',
       overwrite: true,
       onUpdate: () => {
         if (this.label) {
-          this.label.textContent = `${Math.round(this.progressValue.value)}`
+          this.renderLabelText(`${Math.round(this.progressValue.value)}`)
         }
       },
     })
   }
 
-  waitMinimumDuration(duration = 1800) {
+  renderLabelText(value) {
+    if (!this.label) return
+
+    this.label.innerHTML = ''
+
+    String(value).split('').forEach((character) => {
+      const span = document.createElement('span')
+      span.textContent = character
+      span.style.display = 'inline-block'
+      this.label.appendChild(span)
+    })
+  }
+
+  waitMinimumDuration(duration = 2600) {
     return new Promise((resolve) => {
       window.setTimeout(resolve, duration)
     })
@@ -244,7 +257,7 @@ class LoadManager {
     return Promise.all([...assetPromises, ...readinessPromises])
   }
 
-  async runInitialLoad(pageWrapper, onBeforeReveal) {
+  async runInitialLoad(pageWrapper, onRevealStart) {
     if (this.hasCompletedInitialLoad) return
 
     this.ensureOverlay()
@@ -264,46 +277,53 @@ class LoadManager {
 
     this.progressValue.value = 0
     if (this.label) {
-      this.label.textContent = '0'
+      this.renderLabelText('0')
     }
 
     await Promise.all([
       this.preloadAssets(document, (progress) => {
-        this.updateProgress(progress)
+        this.updateProgress(Math.min(progress * 0.92, 0.92))
       }),
-      this.waitMinimumDuration(1800),
+      this.waitMinimumDuration(2600),
     ])
 
     this.updateProgress(1)
 
-    if (onBeforeReveal) {
-      await onBeforeReveal()
-    }
+    await new Promise((resolve) => {
+      if (!this.label?.children?.length) {
+        resolve()
+        return
+      }
+
+      gsap.to(this.label.children, {
+        yPercent: -100,
+        opacity: 0,
+        duration: 0.7,
+        ease: 'power3.inOut',
+        stagger: 0.04,
+        onComplete: resolve,
+      })
+    })
+
+    onRevealStart?.()
 
     await new Promise((resolve) => {
       const tl = gsap.timeline({ onComplete: resolve })
 
-      if (this.label) {
-        tl.to(this.label, {
-          yPercent: -100,
-          opacity: 0,
-          duration: 0.5,
-          ease: 'power3.inOut',
-        })
+      if (this.overlay) {
+        tl.to(this.overlay, {
+          autoAlpha: 0,
+          duration: 0.8,
+          ease: 'power2.out',
+        }, 0)
       }
 
       if (pageWrapper) {
         tl.to(pageWrapper, {
           opacity: 1,
-          duration: 1.1,
+          duration: 1.5,
           ease: 'power3.out',
-        }, this.label ? 0.25 : 0)
-      }
-
-      if (this.overlay) {
-        tl.set(this.overlay, {
-          autoAlpha: 0,
-        })
+        }, 0.1)
       }
     })
 

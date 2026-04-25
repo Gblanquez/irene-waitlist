@@ -45,6 +45,7 @@ export default function labelTextReveal() {
         autoSplit: true,
         mask: "lines",
         onSplit: (self) => {
+          gsap.set(el, { autoAlpha: 1 });
           gsap.set(self.lines, { yPercent: 100, willChange: "transform" });
 
           const tl = gsap.timeline({

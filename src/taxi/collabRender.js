@@ -41,6 +41,13 @@ export default class collabRender extends Renderer {
     this.collabContentSwitchTimeout = null
   }
 
+  prepareInitialTextState() {
+    gsap.set('[data-a="body-text"], [data-a="title-text"], [data-a="label-text"]', {
+      autoAlpha: 0,
+      yPercent: 100,
+    })
+  }
+
   detachThumbnailsFromTaxiView() {
     const thumbnailsParent = document.querySelector('.thumbnails-parent')
     if (!thumbnailsParent) return null
@@ -455,6 +462,12 @@ export default class collabRender extends Renderer {
   }
 
   runPageSetup() {
+    gsap.set('[data-a="body-text"], [data-a="title-text"], [data-a="label-text"]', {
+      autoAlpha: 1,
+      yPercent: 0,
+      clearProps: 'opacity,visibility,transform',
+    })
+
     initScaling()
     SketchManager.refreshMeshes()
     SketchManager.revealMeshes()
@@ -474,8 +487,9 @@ export default class collabRender extends Renderer {
     const boot = async () => {
       const container = document.querySelector('.page-wrapper')
       initScaling()
+      this.prepareInitialTextState()
 
-      await LoadManager.runInitialLoad(container, async () => {
+      await LoadManager.runInitialLoad(container, () => {
         startRAF()
 
         if (container) {
