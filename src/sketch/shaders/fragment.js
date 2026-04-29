@@ -5,6 +5,7 @@ varying vec2 vSize;
 uniform sampler2D uTexture;
 uniform vec2 uTextureSize;
 uniform float uOpacity;
+uniform float uGrayscale;
 
 vec2 getUV(vec2 uv, vec2 textureSize, vec2 quadSize){
     vec2 tempUV = uv - vec2(0.5);
@@ -26,6 +27,8 @@ void main() {
     vec2 uv = getUV(vUv, uTextureSize, vSize);
 
     vec4 color = texture2D(uTexture, uv);
+    float grayscale = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+    color.rgb = mix(color.rgb, vec3(grayscale), uGrayscale);
     color.a *= uOpacity;
 
 gl_FragColor = color;

@@ -9,7 +9,6 @@ class SceneManager {
     if (sceneInstance) return sceneInstance
 
     this.camera = null
-    this.materials = new Map()
     this.meshes = []
     this.isInitialized = false
     this.loadingManager = new THREE.LoadingManager()
@@ -31,6 +30,7 @@ class SceneManager {
       uTexture: { value: texture },
       uTextureSize: { value: new THREE.Vector2(w, h) },
       uOpacity: { value: 1 },
+      uGrayscale: { value: 0 },
       uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
       uQuadSize: { value: new THREE.Vector2(1, 1) },
       time: { value: 0 }
@@ -51,10 +51,11 @@ class SceneManager {
   getTextureEntry(src) {
     if (this.textureEntries.has(src)) return this.textureEntries.get(src)
 
-    const material = this.makeMaterial(this.makeUniforms(null, 1, 1))
     const entry = {
-      material,
       status: 'loading',
+      texture: null,
+      width: 1,
+      height: 1,
       promise: null,
     }
 
@@ -64,23 +65,33 @@ class SceneManager {
         texture.magFilter = THREE.LinearFilter
         texture.generateMipmaps = false
 
-        material.uniforms.uTexture.value = texture
-        material.uniforms.uTextureSize.value.set(texture.image.width, texture.image.height)
+        entry.texture = texture
+        entry.width = texture.image.width
+        entry.height = texture.image.height
         entry.status = 'loaded'
-        resolve(material)
+        resolve(entry)
       }, undefined, () => {
         entry.status = 'error'
-        resolve(material)
+        resolve(entry)
       })
     })
 
     this.textureEntries.set(src, entry)
-    this.materials.set(src, material)
     return entry
   }
 
   createMaterial(src) {
-    return this.getTextureEntry(src).material
+    const entry = this.getTextureEntry(src)
+    const material = this.makeMaterial(this.makeUniforms(entry.texture, entry.width, entry.height))
+
+    entry.promise.then((resolvedEntry) => {
+      if (!resolvedEntry.texture) return
+
+      material.uniforms.uTexture.value = resolvedEntry.texture
+      material.uniforms.uTextureSize.value.set(resolvedEntry.width, resolvedEntry.height)
+    })
+
+    return material
   }
 
   getVideoEntry(src) {
@@ -105,11 +116,12 @@ class SceneManager {
 
     video.play().catch(() => {})
 
-    const material = this.makeMaterial(this.makeUniforms(null, 1920, 1080))
     const entry = {
-      material,
       video,
       status: 'loading',
+      texture: null,
+      width: 1920,
+      height: 1080,
       promise: null,
     }
 
@@ -122,26 +134,36 @@ class SceneManager {
         texture.generateMipmaps = false
         texture.format = THREE.RGBAFormat
 
-        material.uniforms.uTexture.value = texture
-        material.uniforms.uTextureSize.value.set(video.videoWidth || 1920, video.videoHeight || 1080)
+        entry.texture = texture
+        entry.width = video.videoWidth || 1920
+        entry.height = video.videoHeight || 1080
         entry.status = 'loaded'
-        resolve(material)
+        resolve(entry)
       }
 
       video.addEventListener('loadeddata', complete, { once: true })
       video.addEventListener('error', () => {
         entry.status = 'error'
-        resolve(material)
+        resolve(entry)
       }, { once: true })
     })
 
     this.videoEntries.set(src, entry)
-    this.materials.set(src, material)
     return entry
   }
 
   createVideoMaterial(src) {
-    return this.getVideoEntry(src).material
+    const entry = this.getVideoEntry(src)
+    const material = this.makeMaterial(this.makeUniforms(entry.texture, entry.width, entry.height))
+
+    entry.promise.then((resolvedEntry) => {
+      if (!resolvedEntry.texture) return
+
+      material.uniforms.uTexture.value = resolvedEntry.texture
+      material.uniforms.uTextureSize.value.set(resolvedEntry.width, resolvedEntry.height)
+    })
+
+    return material
   }
 
   resolveAssetUrl(src, baseUrl = window.location.href) {
@@ -222,6 +244,11 @@ class SceneManager {
       } else {
         return
       }
+
+      material.uniforms.uGrayscale.value = (
+        wrap.classList.contains('dark') ||
+        img?.classList.contains('dark')
+      ) ? 1 : 0
 
       this.meshes.push({
         element: wrap,
