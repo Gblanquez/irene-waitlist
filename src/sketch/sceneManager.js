@@ -31,6 +31,9 @@ class SceneManager {
       uTextureSize: { value: new THREE.Vector2(w, h) },
       uOpacity: { value: 1 },
       uGrayscale: { value: 0 },
+      uVintage: { value: 0 },
+      uShadowColor: { value: new THREE.Color('#3e3126') },
+      uHighlightColor: { value: new THREE.Color('#bea98b') },
       uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
       uQuadSize: { value: new THREE.Vector2(1, 1) },
       time: { value: 0 }
@@ -245,10 +248,13 @@ class SceneManager {
         return
       }
 
-      material.uniforms.uGrayscale.value = (
+      const isDark = (
         wrap.classList.contains('dark') ||
         img?.classList.contains('dark')
-      ) ? 1 : 0
+      )
+
+      material.uniforms.uGrayscale.value = isDark ? 1 : 0
+      material.uniforms.uVintage.value = isDark ? 0.6 : 0
 
       this.meshes.push({
         element: wrap,
