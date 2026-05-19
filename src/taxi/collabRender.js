@@ -48,6 +48,10 @@ export default class collabRender extends Renderer {
     })
   }
 
+  isMobileCollabContentDisabled() {
+    return window.innerWidth <= 480
+  }
+
   detachThumbnailsFromTaxiView() {
     const thumbnailsParent = document.querySelector('.thumbnails-parent')
     if (!thumbnailsParent) return null
@@ -315,6 +319,11 @@ export default class collabRender extends Renderer {
   }
 
   setupCollabContentSync() {
+    if (this.isMobileCollabContentDisabled()) {
+      this.cleanupDetachedCollabContents()
+      return
+    }
+
     this.detachCollabContentsFromTaxiView()
     if (!this.collabContents.length) return
 
